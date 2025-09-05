@@ -3,10 +3,8 @@ const router = express.Router();
 const path = require('path');
 const serviceRegistry = require('../services/serviceRegistry');
 
-// Get the shared vector service instance
-const vectorService = serviceRegistry.get('vectorService');
-
 router.post('/process-knowledge-base', async (req, res) => {
+  const vectorService = serviceRegistry.get('vectorService');
   if (!vectorService) {
     return res.status(503).json({ error: 'Vector service not yet initialized. Please try again in a moment.' });
   }
@@ -66,6 +64,7 @@ router.get('/search', async (req, res) => {
 });
 
 router.get('/stats', async (req, res) => {
+  const vectorService = serviceRegistry.get('vectorService');
   if (!vectorService) {
     return res.status(503).json({ error: 'Vector service not yet initialized. Please try again in a moment.' });
   }
@@ -83,6 +82,7 @@ router.get('/stats', async (req, res) => {
 });
 
 router.post('/clear', async (req, res) => {
+  const vectorService = serviceRegistry.get('vectorService');
   if (!vectorService) {
     return res.status(503).json({ error: 'Vector service not yet initialized. Please try again in a moment.' });
   }
@@ -100,6 +100,7 @@ router.post('/clear', async (req, res) => {
 });
 
 router.post('/reprocess-all', async (req, res) => {
+  const vectorService = serviceRegistry.get('vectorService');
   if (!vectorService) {
     return res.status(503).json({ error: 'Vector service not yet initialized. Please try again in a moment.' });
   }

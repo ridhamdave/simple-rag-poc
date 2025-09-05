@@ -205,11 +205,25 @@ print_status "Starting backend server on port ${PORT:-5001}..."
 npm start &
 BACKEND_PID=$!
 
-# Wait for backend to be ready
-if ! wait_for_service "http://localhost:${PORT:-5001}/api/auth/google" "Backend server"; then
-    kill $BACKEND_PID 2>/dev/null || true
-    exit 1
-fi
+# Wait for backend to be ready (including vector service initialization)
+print_status "Waiting for vector service to initialize..."
+max_attempts=60
+attempt=1
+
+while [ $attempt -le $max_attempts ]; do
+    response=$(curl -s "http://localhost:${PORT:-5001}/api/vector/stats" 2>/dev/null || echo "")
+    if echo "$response" | grep -q '"documentCount"'; then
+        print_success "Vector service is ready!"
+        break
+    elif [ $attempt -eq $max_attempts ]; then
+        print_error "Vector service failed to initialize within 120 seconds"
+        kill $BACKEND_PID 2>/dev/null || true
+        exit 1
+    fi
+    echo -n "."
+    sleep 2
+    attempt=$((attempt + 1))
+done
 
 # Start the frontend development server
 print_status "Starting frontend development server on port 3000..."

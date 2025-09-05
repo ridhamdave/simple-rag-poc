@@ -6,7 +6,7 @@ A full-stack Retrieval-Augmented Generation (RAG) chat system built with React, 
 
 ## 🌟 Features
 
-- **Document Processing**: Upload and process PDF, TXT, MD, and DOCX files
+- **Document Processing**: Upload and process PDF, TXT, MD, DOCX, PPT, PPTX, XLS, and XLSX files
 - **AI-Powered Chat**: Chat with Google Gemini AI that references your documents
 - **User Authentication**: Google OAuth 2.0 integration
 - **Persistent Chat History**: Save and manage conversation history
@@ -226,6 +226,8 @@ The application will be available at:
 - Text files (.txt)
 - Markdown (.md)
 - Word documents (.docx)
+- PowerPoint presentations (.ppt, .pptx)
+- Excel spreadsheets (.xls, .xlsx)
 
 ### Vector Search
 - Uses Google Gemini `embedding-001` model

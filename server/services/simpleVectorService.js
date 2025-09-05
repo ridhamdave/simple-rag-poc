@@ -4,6 +4,8 @@ const path = require('path');
 const pdfParse = require('pdf-parse');
 const mammoth = require('mammoth');
 const chokidar = require('chokidar');
+const officeParser = require('officeparser');
+const xlsx = require('xlsx');
 
 class SimpleVectorService {
   constructor() {
@@ -83,9 +85,14 @@ class SimpleVectorService {
     try {
       const fileName = path.basename(filePath);
       const fileExt = path.extname(fileName).toLowerCase();
+      const fileNameLower = fileName.toLowerCase();
+      const excludedFiles = ['.gitkeep', '.DS_Store', 'Thumbs.db', '.gitignore'];
       
-      if (!['.pdf', '.txt', '.md', '.docx'].includes(fileExt)) {
-        console.log(`Skipping unsupported file: ${fileName}`);
+      // Skip unsupported files and system files
+      if (!['.pdf', '.txt', '.md', '.docx', '.ppt', '.pptx', '.xls', '.xlsx'].includes(fileExt) || 
+          excludedFiles.includes(fileNameLower) ||
+          fileNameLower.startsWith('.')) {
+        console.log(`Skipping unsupported/system file: ${fileName}`);
         return;
       }
 
@@ -164,6 +171,22 @@ class SimpleVectorService {
         text = result.value;
       } else if (ext === '.txt' || ext === '.md') {
         text = await fs.readFile(filePath, 'utf8');
+      } else if (ext === '.ppt' || ext === '.pptx') {
+        // Parse PowerPoint files
+        text = await officeParser.parseOffice(filePath);
+      } else if (ext === '.xls' || ext === '.xlsx') {
+        // Parse Excel files
+        const workbook = xlsx.readFile(filePath);
+        let allText = '';
+        
+        // Extract text from all worksheets
+        workbook.SheetNames.forEach(sheetName => {
+          const worksheet = workbook.Sheets[sheetName];
+          const sheetText = xlsx.utils.sheet_to_csv(worksheet, { header: 1 });
+          allText += `\n--- Sheet: ${sheetName} ---\n${sheetText}\n`;
+        });
+        
+        text = allText;
       } else {
         throw new Error(`Unsupported file type: ${ext}`);
       }
@@ -200,11 +223,18 @@ class SimpleVectorService {
   async processKnowledgeBase(knowledgeBasePath) {
     try {
       const files = await fs.readdir(knowledgeBasePath);
-      const supportedExtensions = ['.pdf', '.txt', '.md', '.docx'];
+      const supportedExtensions = ['.pdf', '.txt', '.md', '.docx', '.ppt', '.pptx', '.xls', '.xlsx'];
+      const excludedFiles = ['.gitkeep', '.DS_Store', 'Thumbs.db', '.gitignore'];
       
-      const supportedFiles = files.filter(file => 
-        supportedExtensions.includes(path.extname(file).toLowerCase())
-      );
+      const supportedFiles = files.filter(file => {
+        const ext = path.extname(file).toLowerCase();
+        const fileName = file.toLowerCase();
+        
+        // Include files with supported extensions and exclude system files
+        return supportedExtensions.includes(ext) && 
+               !excludedFiles.includes(fileName) &&
+               !fileName.startsWith('.');
+      });
 
       console.log(`Found ${supportedFiles.length} supported files to process`);
 

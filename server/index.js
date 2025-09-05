@@ -87,11 +87,6 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
 });
 
-// Initialize vector service
-vectorService.initialize().then(() => {
-  console.log('Vector service initialized with file watching');
-}).catch(console.error);
-
 // Graceful shutdown
 process.on('SIGINT', async () => {
   console.log('\nShutting down gracefully...');
@@ -105,8 +100,22 @@ process.on('SIGTERM', async () => {
   process.exit(0);
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Knowledge base directory: ${path.join(__dirname, '../knowledge-base')}`);
-  console.log('File watching enabled - no need to restart when adding files!');
-});
+// Initialize vector service and start server
+async function startServer() {
+  try {
+    console.log('Initializing vector service...');
+    await vectorService.initialize();
+    console.log('Vector service initialized with file watching');
+    
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+      console.log(`Knowledge base directory: ${path.join(__dirname, '../knowledge-base')}`);
+      console.log('File watching enabled - no need to restart when adding files!');
+    });
+  } catch (error) {
+    console.error('Failed to initialize vector service:', error);
+    process.exit(1);
+  }
+}
+
+startServer();

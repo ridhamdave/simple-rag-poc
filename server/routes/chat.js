@@ -5,29 +5,15 @@ const Conversation = require('../models/Conversation');
 const { authenticateToken } = require('./auth');
 const serviceRegistry = require('../services/serviceRegistry');
 
-// Get services from registry
-let vectorService;
-let chatService;
-
-// Initialize services when the module loads
-setTimeout(() => {
-  vectorService = serviceRegistry.get('vectorService');
-  if (vectorService && vectorService.searchSimilar) {
-    chatService = new ChatService(vectorService);
-    console.log('Chat service initialized with vector service');
-  } else {
-    console.error('Vector service not available or not properly initialized for chat service');
-  }
-}, 1000); // Wait 1 second for the main server to initialize
+// Services will be retrieved from registry in each route handler
 
 router.post('/message', authenticateToken, async (req, res) => {
-  if (!chatService) {
-    return res.status(503).json({ error: 'Chat service not yet initialized. Please try again in a moment.' });
-  }
-
-  if (!vectorService || !chatService.vectorService) {
+  const vectorService = serviceRegistry.get('vectorService');
+  if (!vectorService) {
     return res.status(503).json({ error: 'Vector service not yet initialized. Please try again in a moment.' });
   }
+  
+  const chatService = new ChatService(vectorService);
 
   try {
     const { message, conversationId } = req.body;
