@@ -12,13 +12,49 @@ const GeminiErrorHandler = require('../utils/geminiErrorHandler');
 function extractTextFromSlide(slideData) {
   let text = '';
   
-  function extractTextRecursively(obj) {
+  function extractTextRecursively(obj, depth = 0) {
+    // Limit recursion depth to avoid going too deep
+    if (depth > 15) return;
+    
     if (typeof obj === 'string') {
-      text += obj + ' ';
+      // Only add strings that look like actual text content
+      const trimmed = obj.trim();
+      if (trimmed && 
+          !trimmed.startsWith('http://') && 
+          !trimmed.startsWith('https://') &&
+          !trimmed.startsWith('{') && // Skip GUIDs
+          !trimmed.match(/^[0-9\s\-\.]+$/) && // Skip pure numbers
+          !trimmed.match(/^[a-z]+:[a-z]+/) && // Skip XML namespaces
+          !trimmed.match(/^[0-9]+$/) && // Skip pure numbers
+          !trimmed.includes('schemas') && // Skip schema references
+          !trimmed.includes('xmlns') && // Skip XML namespace declarations
+          !trimmed.match(/^[A-F0-9\-]{8,}$/i) && // Skip GUIDs and hex IDs
+          !trimmed.match(/^(ctrTitle|subTitle|Title|horz|en-US)$/i) && // Skip common PowerPoint metadata
+          (trimmed.length > 2 || trimmed.match(/^[A-Z]{2,}$/))) { // Allow short words if they're all caps (like RAG)
+        text += trimmed + ' ';
+      }
     } else if (Array.isArray(obj)) {
-      obj.forEach(extractTextRecursively);
+      obj.forEach(item => extractTextRecursively(item, depth + 1));
     } else if (obj && typeof obj === 'object') {
-      Object.values(obj).forEach(extractTextRecursively);
+      // Look for specific text-containing elements in PowerPoint XML
+      if (obj['a:t']) {
+        // This is the actual text content in PowerPoint
+        extractTextRecursively(obj['a:t'], depth + 1);
+      } else if (obj['p:txBody']) {
+        // This is the text body of a slide - traverse it
+        extractTextRecursively(obj['p:txBody'], depth + 1);
+      } else if (obj['a:p']) {
+        // This is a paragraph - traverse it
+        extractTextRecursively(obj['a:p'], depth + 1);
+      } else if (obj['a:r']) {
+        // This is a run - traverse it
+        extractTextRecursively(obj['a:r'], depth + 1);
+      } else {
+        // For other objects, traverse all properties
+        Object.values(obj).forEach(value => {
+          extractTextRecursively(value, depth + 1);
+        });
+      }
     }
   }
   
