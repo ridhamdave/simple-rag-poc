@@ -33,6 +33,10 @@ const ChatInterface = ({
     } else {
       // New conversation
       setMessages([]);
+      // Focus input for new conversation
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
     }
   }, [currentConversationId]);
 
@@ -54,6 +58,11 @@ const ChatInterface = ({
       }
     } catch (error) {
       console.error('Failed to load conversation:', error);
+    } finally {
+      // Focus input after loading conversation
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
     }
   };
 
@@ -82,11 +91,6 @@ const ChatInterface = ({
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
-    
-    // Focus back to input after sending
-    setTimeout(() => {
-      inputRef.current?.focus();
-    }, 100);
 
     try {
       const response = await fetchApi('/api/chat/message', {
@@ -117,28 +121,57 @@ const ChatInterface = ({
         }
       } else {
         const errorMessage = data.error || 'Failed to get response';
+        const errorType = data.type || 'unknown';
+        const isRetryable = data.retryable || false;
+        
+        let userFriendlyMessage = errorMessage;
+        
+        // Handle specific error types with helpful messages
+        if (errorMessage.includes('not yet initialized')) {
+          userFriendlyMessage = 'The system is still starting up. Please wait a moment and try again.';
+        } else if (errorType === 'quota_exceeded' || response.status === 429) {
+          userFriendlyMessage = '⚠️ API quota exceeded. The system automatically retries, but you may need to wait a few moments before trying again.';
+        } else if (errorType === 'unauthorized' || response.status === 401) {
+          userFriendlyMessage = '🔑 API authentication issue. Please contact the administrator.';
+        } else if (errorType === 'forbidden' || response.status === 403) {
+          userFriendlyMessage = '🚫 API access forbidden. Please contact the administrator.';
+        } else if (isRetryable) {
+          userFriendlyMessage = `⏳ ${errorMessage} Please try again in a moment.`;
+        } else {
+          userFriendlyMessage = `❌ ${errorMessage}`;
+        }
+        
         setMessages(prev => [...prev, {
           role: 'assistant',
-          content: errorMessage.includes('not yet initialized') 
-            ? 'The system is still starting up. Please wait a moment and try again.'
-            : `Error: ${errorMessage}`,
-          isError: true
+          content: userFriendlyMessage,
+          isError: true,
+          errorType: errorType,
+          retryable: isRetryable
         }]);
       }
     } catch (error) {
       console.error('Error sending message:', error);
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.',
+        content: '❌ Network error occurred. Please check your connection and try again.',
         isError: true
       }]);
     } finally {
       setIsLoading(false);
+      
+      // Focus back to input after all processing is complete
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
     }
   };
 
   const clearConversation = () => {
     setMessages([]);
+    // Focus input after clearing
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
   };
 
   return (

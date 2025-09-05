@@ -56,6 +56,28 @@ kill_port() {
     fi
 }
 
+# Cleanup function for graceful shutdown
+cleanup() {
+    print_status "🛑 Shutting down DaveMind..."
+    
+    # Kill background processes
+    if [ ! -z "$BACKEND_PID" ]; then
+        kill $BACKEND_PID 2>/dev/null || true
+    fi
+    if [ ! -z "$FRONTEND_PID" ]; then
+        kill $FRONTEND_PID 2>/dev/null || true
+    fi
+    
+    # Use stop script for thorough cleanup
+    ./stop.sh
+    
+    print_success "✅ DaveMind stopped successfully!"
+    exit 0
+}
+
+# Set up trap for graceful shutdown
+trap cleanup SIGINT SIGTERM
+
 # Function to wait for service to be ready
 wait_for_service() {
     local url=$1
@@ -186,6 +208,22 @@ if [ -z "$GEMINI_API_KEY" ] || [ "$GEMINI_API_KEY" = "your_gemini_api_key_here" 
     exit 1
 fi
 
+# Test Gemini model functionality
+print_status "Testing Gemini 2.0 Flash-Lite model..."
+if node scripts/test-model.js; then
+    print_success "Gemini model test passed!"
+else
+    print_error "Gemini model test failed! Please check your API key and model availability."
+    print_warning "You can continue anyway, but the chat functionality may not work properly."
+    echo ""
+    read -p "Do you want to continue anyway? (y/N): " -n 1 -r
+    echo ""
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        print_status "Exiting..."
+        exit 1
+    fi
+fi
+
 if [ -z "$JWT_SECRET" ] || [ "$JWT_SECRET" = "your_jwt_secret_here" ]; then
     print_warning "JWT_SECRET is not configured. Generating a random one..."
     JWT_SECRET=$(openssl rand -hex 32 2>/dev/null || head /dev/urandom | tr -dc A-Za-z0-9 | head -c 64)
@@ -250,19 +288,7 @@ echo "   • Documents are automatically processed when added"
 echo "   • Sign in with Google to start chatting"
 echo "   • Chat history is automatically saved"
 echo ""
-print_warning "To stop the application, press Ctrl+C or run: kill $BACKEND_PID $FRONTEND_PID"
-
-# Create a cleanup function
-cleanup() {
-    print_status "Shutting down servers..."
-    kill $BACKEND_PID 2>/dev/null || true
-    kill $FRONTEND_PID 2>/dev/null || true
-    print_success "Servers stopped"
-    exit 0
-}
-
-# Set up signal handlers
-trap cleanup SIGINT SIGTERM
+print_warning "To stop the application, press Ctrl+C or run: ./stop.sh"
 
 # Keep the script running
 print_status "Press Ctrl+C to stop the application"

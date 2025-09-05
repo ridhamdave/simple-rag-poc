@@ -6,6 +6,7 @@ const mammoth = require('mammoth');
 const chokidar = require('chokidar');
 const officeParser = require('officeparser');
 const xlsx = require('xlsx');
+const GeminiErrorHandler = require('../utils/geminiErrorHandler');
 
 class SimpleVectorService {
   constructor() {
@@ -116,11 +117,26 @@ class SimpleVectorService {
   async generateEmbedding(text) {
     try {
       const model = this.genAI.getGenerativeModel({ model: 'embedding-001' });
-      const result = await model.embedContent(text);
+      
+      // Use error handler for API call with retry logic
+      const result = await GeminiErrorHandler.handleApiCall(
+        () => model.embedContent(text),
+        'Embedding Generation',
+        3, // retries
+        2000 // base delay (2 seconds)
+      );
+      
       return result.embedding.values;
     } catch (error) {
-      console.error('Error generating embedding:', error);
-      throw error;
+      console.error('[VECTOR] Error generating embedding:', error);
+      
+      // For embeddings, we might want to skip the problematic chunk rather than fail entirely
+      const publicMessage = GeminiErrorHandler.getPublicErrorMessage(error);
+      const embeddingError = new Error(`Embedding generation failed: ${publicMessage}`);
+      embeddingError.originalError = error;
+      embeddingError.context = 'embedding_generation';
+      
+      throw embeddingError;
     }
   }
 
@@ -196,23 +212,41 @@ class SimpleVectorService {
       const chunks = await this.chunkText(cleanedText);
       
       // Generate embeddings and store
+      let successfulChunks = 0;
+      let failedChunks = 0;
+      
       for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
-        const embedding = await this.generateEmbedding(chunk);
         
-        this.embeddings.push(embedding);
-        this.documents.push(chunk);
-        this.metadatas.push({
-          source: fileName,
-          chunk_index: i,
-          total_chunks: chunks.length
-        });
+        try {
+          const embedding = await this.generateEmbedding(chunk);
+          
+          this.embeddings.push(embedding);
+          this.documents.push(chunk);
+          this.metadatas.push({
+            source: fileName,
+            chunk_index: i,
+            total_chunks: chunks.length
+          });
+          
+          successfulChunks++;
+        } catch (error) {
+          failedChunks++;
+          console.error(`[VECTOR] Failed to process chunk ${i} of ${fileName}:`, error.message);
+          
+          // Continue processing other chunks instead of failing entirely
+          // This allows partial document processing even if some chunks fail
+        }
+      }
+      
+      if (failedChunks > 0) {
+        console.warn(`[VECTOR] ${fileName}: ${successfulChunks} chunks processed successfully, ${failedChunks} chunks failed`);
       }
 
       // Save the updated data
       await this.saveData();
 
-      console.log(`Processed ${fileName}: ${chunks.length} chunks added`);
+      console.log(`Processed ${fileName}: ${successfulChunks} chunks added successfully`);
       return { success: true, chunks: chunks.length };
     } catch (error) {
       console.error(`Error processing document ${fileName}:`, error);

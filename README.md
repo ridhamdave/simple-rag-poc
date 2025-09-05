@@ -7,7 +7,7 @@ A full-stack Retrieval-Augmented Generation (RAG) chat system built with React, 
 ## 🌟 Features
 
 - **Document Processing**: Upload and process PDF, TXT, MD, DOCX, PPT, PPTX, XLS, and XLSX files
-- **AI-Powered Chat**: Chat with Google Gemini AI that references your documents
+- **AI-Powered Chat**: Chat with Google Gemini 2.0 Flash-Lite AI that references your documents
 - **User Authentication**: Google OAuth 2.0 integration
 - **Persistent Chat History**: Save and manage conversation history
 - **Real-time File Watching**: Automatically process new documents added to knowledge base
@@ -19,7 +19,7 @@ A full-stack Retrieval-Augmented Generation (RAG) chat system built with React, 
 ### Backend
 - **Node.js/Express**: REST API server
 - **MongoDB**: User data and chat history storage
-- **Google Gemini AI**: Text generation and embeddings
+- **Google Gemini 2.0 Flash-Lite**: Text generation and embeddings
 - **Custom Vector Service**: JSON-based vector storage with semantic search
 - **Passport.js**: Google OAuth authentication
 - **Chokidar**: File system watching for auto-processing
@@ -302,4 +302,4 @@ If you encounter any issues or have questions, please:
 
 ---
 
-**DaveMind - Made with ❤️ by Ridham Dave using React, Node.js, and Google Gemini AI**
+**DaveMind - Made with ❤️ by Ridham Dave using React, Node.js, and Google Gemini 2.0 Flash-Lite AI**

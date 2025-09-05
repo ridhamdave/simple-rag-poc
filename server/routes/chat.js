@@ -84,10 +84,33 @@ router.post('/message', authenticateToken, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Chat error:', error);
-    res.status(500).json({ 
-      error: 'Failed to generate response',
-      details: error.message 
+    console.error('[CHAT ROUTE] Chat error:', error);
+    
+    // Determine appropriate status code based on error type
+    let statusCode = 500;
+    let errorMessage = 'Failed to generate response';
+    
+    if (error.context === 'chat_generation' || error.isGeminiError) {
+      // Use the user-friendly message from our error handler
+      errorMessage = error.message;
+      
+      // Set appropriate status codes for different error types
+      if (error.originalError && error.originalError.message) {
+        if (error.originalError.message.includes('429')) {
+          statusCode = 429; // Too Many Requests
+        } else if (error.originalError.message.includes('401')) {
+          statusCode = 401; // Unauthorized
+        } else if (error.originalError.message.includes('403')) {
+          statusCode = 403; // Forbidden
+        }
+      }
+    }
+    
+    res.status(statusCode).json({ 
+      error: errorMessage,
+      details: error.technicalMessage || error.message,
+      type: error.errorType || 'unknown',
+      retryable: statusCode === 429 || statusCode >= 500
     });
   }
 });

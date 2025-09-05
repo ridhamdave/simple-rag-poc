@@ -1,4 +1,5 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const GeminiErrorHandler = require('../utils/geminiErrorHandler');
 
 class ChatService {
   constructor(vectorService) {
@@ -48,14 +49,18 @@ Instructions:
       }
 
       const model = this.genAI.getGenerativeModel({ 
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.0-flash-lite',
         generationConfig: {
           maxOutputTokens: 1000,
           temperature: 0.7,
         }
       });
 
-      const result = await model.generateContent(fullPrompt);
+      // Use error handler for API call with retry logic
+      const result = await GeminiErrorHandler.handleApiCall(
+        () => model.generateContent(fullPrompt),
+        'Chat Response Generation'
+      );
       const answer = result.response.text();
       
       // Extract sources from relevant documents
@@ -74,8 +79,15 @@ Instructions:
         }))
       };
     } catch (error) {
-      console.error('Error generating response:', error);
-      throw error;
+      console.error('[CHAT] Error generating response:', error);
+      
+      // Create a user-friendly error response
+      const publicMessage = GeminiErrorHandler.getPublicErrorMessage(error);
+      const chatError = new Error(publicMessage);
+      chatError.originalError = error;
+      chatError.context = 'chat_generation';
+      
+      throw chatError;
     }
   }
 }
