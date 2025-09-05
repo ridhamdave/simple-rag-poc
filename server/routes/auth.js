@@ -5,7 +5,11 @@ const router = express.Router();
 
 // Google OAuth login
 router.get('/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] })
+  passport.authenticate('google', { 
+    scope: ['profile', 'email'],
+    accessType: 'offline',
+    prompt: 'consent'
+  })
 );
 
 // Google OAuth callback

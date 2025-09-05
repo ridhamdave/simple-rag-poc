@@ -20,7 +20,7 @@ const upload = multer({
   storage: storage,
   fileFilter: (req, file, cb) => {
     // Allow only supported file types
-    const allowedTypes = ['.pdf', '.txt', '.md', '.docx'];
+    const allowedTypes = ['.pdf', '.txt', '.md', '.docx', '.ppt', '.pptx', '.xls', '.xlsx'];
     const ext = path.extname(file.originalname).toLowerCase();
     
     if (allowedTypes.includes(ext)) {

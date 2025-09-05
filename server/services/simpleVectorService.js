@@ -4,9 +4,27 @@ const path = require('path');
 const pdfParse = require('pdf-parse');
 const mammoth = require('mammoth');
 const chokidar = require('chokidar');
-const officeParser = require('officeparser');
+const pptx2json = require('pptx2json');
 const xlsx = require('xlsx');
 const GeminiErrorHandler = require('../utils/geminiErrorHandler');
+
+// Helper function to extract text from PowerPoint slide XML
+function extractTextFromSlide(slideData) {
+  let text = '';
+  
+  function extractTextRecursively(obj) {
+    if (typeof obj === 'string') {
+      text += obj + ' ';
+    } else if (Array.isArray(obj)) {
+      obj.forEach(extractTextRecursively);
+    } else if (obj && typeof obj === 'object') {
+      Object.values(obj).forEach(extractTextRecursively);
+    }
+  }
+  
+  extractTextRecursively(slideData);
+  return text.trim();
+}
 
 class SimpleVectorService {
   constructor() {
@@ -189,7 +207,32 @@ class SimpleVectorService {
         text = await fs.readFile(filePath, 'utf8');
       } else if (ext === '.ppt' || ext === '.pptx') {
         // Parse PowerPoint files
-        text = await officeParser.parseOffice(filePath);
+        try {
+          const pptx = new pptx2json();
+          const pptxData = await pptx.toJson(filePath);
+          let allText = '';
+          
+          // Extract text from slide objects (already parsed by pptx2json)
+          for (const [filePath, content] of Object.entries(pptxData)) {
+            if (filePath.startsWith('ppt/slides/slide') && filePath.endsWith('.xml')) {
+              try {
+                const slideNumber = filePath.match(/slide(\d+)\.xml/)?.[1] || 'unknown';
+                allText += `\n--- Slide ${slideNumber} ---\n`;
+                
+                // Extract text directly from the parsed object
+                const textContent = extractTextFromSlide(content);
+                allText += textContent + '\n';
+              } catch (slideError) {
+                console.warn(`Warning: Could not parse slide ${filePath}:`, slideError.message);
+              }
+            }
+          }
+          
+          text = allText || `[PowerPoint file - no text content found: ${fileName}]`;
+        } catch (error) {
+          console.warn(`Warning: Could not parse PowerPoint file ${fileName}:`, error.message);
+          text = `[PowerPoint file - content could not be extracted: ${fileName}]`;
+        }
       } else if (ext === '.xls' || ext === '.xlsx') {
         // Parse Excel files
         const workbook = xlsx.readFile(filePath);
@@ -208,7 +251,7 @@ class SimpleVectorService {
       }
 
       // Clean and chunk the text
-      const cleanedText = text.replace(/\s+/g, ' ').trim();
+      const cleanedText = (text || '').replace(/\s+/g, ' ').trim();
       const chunks = await this.chunkText(cleanedText);
       
       // Generate embeddings and store

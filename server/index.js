@@ -34,12 +34,27 @@ serviceRegistry.register('vectorService', vectorService);
 // Security middleware
 app.use(helmet());
 
-// Rate limiting
+// Rate limiting - exclude auth routes
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100 // limit each IP to 100 requests per windowMs
 });
-app.use('/api/', limiter);
+
+// Apply rate limiting to all API routes except auth
+app.use('/api/', (req, res, next) => {
+  if (req.path.startsWith('/auth/')) {
+    return next(); // Skip rate limiting for auth routes
+  }
+  return limiter(req, res, next);
+});
+
+// Separate rate limiter for auth routes (more lenient)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // Allow more auth attempts
+  message: 'Too many authentication attempts, please try again later.'
+});
+app.use('/api/auth/', authLimiter);
 
 // CORS configuration
 app.use(cors({
@@ -53,8 +68,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
+// Body parsing middleware - only for non-file upload routes
 app.use(express.urlencoded({ extended: true }));
 
 // Session configuration
@@ -77,10 +91,10 @@ app.use(express.static(path.join(__dirname, '../client/build')));
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/conversations', conversationRoutes);
-app.use('/api/chat', chatRoutes);
+app.use('/api/conversations', express.json({ limit: '10mb' }), conversationRoutes);
+app.use('/api/chat', express.json({ limit: '10mb' }), chatRoutes);
 app.use('/api/knowledge', knowledgeRoutes);
-app.use('/api/vector', vectorRoutes);
+app.use('/api/vector', express.json({ limit: '10mb' }), vectorRoutes);
 
 // Serve React app
 app.get('*', (req, res) => {

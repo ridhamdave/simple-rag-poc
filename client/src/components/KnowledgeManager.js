@@ -197,6 +197,12 @@ const KnowledgeManager = ({ onVectorUpdate }) => {
         return '📋';
       case '.docx':
         return '📄';
+      case '.ppt':
+      case '.pptx':
+        return '📊';
+      case '.xls':
+      case '.xlsx':
+        return '📈';
       default:
         return '📄';
     }
@@ -262,10 +268,10 @@ const KnowledgeManager = ({ onVectorUpdate }) => {
           <div className="flex items-center space-x-4">
             <label className="flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200">
               <Upload className="h-4 w-4" />
-              <span>Upload File</span>
+              <span>Upload File (PDF, DOCX, PPT, XLS, etc.)</span>
               <input
                 type="file"
-                accept=".pdf,.txt,.md,.docx"
+                accept=".pdf,.txt,.md,.docx,.ppt,.pptx,.xls,.xlsx"
                 onChange={handleFileUpload}
                 className="hidden"
                 disabled={isProcessing}

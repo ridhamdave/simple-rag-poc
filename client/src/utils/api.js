@@ -9,9 +9,13 @@ export const fetchApi = async (path, options = {}) => {
   const token = localStorage.getItem('token');
   
   const headers = {
-    'Content-Type': 'application/json',
     ...options.headers,
   };
+  
+  // Only set Content-Type for JSON requests, not for FormData
+  if (!(options.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
   
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
