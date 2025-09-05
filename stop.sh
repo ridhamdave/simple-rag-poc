@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# RAG Chat System - Stop Script
+# DaveMind - Stop Script
+# RAG Chat System created by Ridham Dave
 # This script stops all running instances of the application
 
 # Colors for output
@@ -44,7 +45,7 @@ kill_port() {
     fi
 }
 
-print_status "🛑 Stopping RAG Chat System..."
+print_status "🛑 Stopping DaveMind..."
 
 # Stop frontend (React dev server)
 kill_port 3000 "Frontend server"
@@ -57,4 +58,4 @@ print_status "Cleaning up any remaining node processes..."
 pkill -f "react-scripts start" 2>/dev/null || true
 pkill -f "server/index.js" 2>/dev/null || true
 
-print_success "🎉 RAG Chat System stopped successfully!"
+print_success "🎉 DaveMind stopped successfully!"

@@ -1,6 +1,8 @@
-# RAG Chat System
+# DaveMind - RAG Chat System
 
 A full-stack Retrieval-Augmented Generation (RAG) chat system built with React, Node.js, and Google Gemini AI. This application allows users to upload documents to a knowledge base and chat with an AI that can answer questions based on those documents.
+
+**Created by Ridham Dave**
 
 ## 🌟 Features
 
@@ -298,4 +300,4 @@ If you encounter any issues or have questions, please:
 
 ---
 
-**Made with ❤️ using React, Node.js, and Google Gemini AI**
+**DaveMind - Made with ❤️ by Ridham Dave using React, Node.js, and Google Gemini AI**

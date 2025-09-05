@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# RAG Chat System - One-Shot Startup Script
+# DaveMind - One-Shot Startup Script
+# RAG Chat System created by Ridham Dave
 # This script handles complete setup and launch of the application
 
 set -e  # Exit on any error
@@ -77,7 +78,7 @@ wait_for_service() {
     return 1
 }
 
-print_status "🚀 Starting RAG Chat System Setup..."
+print_status "🚀 Starting DaveMind Setup..."
 
 # Check prerequisites
 print_status "Checking prerequisites..."
@@ -224,7 +225,7 @@ if ! wait_for_service "http://localhost:3000" "Frontend server"; then
     exit 1
 fi
 
-print_success "🎉 RAG Chat System is now running!"
+print_success "🎉 DaveMind is now running!"
 echo ""
 echo "📱 Frontend: http://localhost:3000"
 echo "🔧 Backend API: http://localhost:${PORT:-5001}"

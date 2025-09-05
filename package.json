@@ -1,7 +1,7 @@
 {
-  "name": "rag-system",
+  "name": "davemind",
   "version": "1.0.0",
-  "description": "A RAG (Retrieval-Augmented Generation) system with knowledge base and chat interface",
+  "description": "DaveMind - A RAG (Retrieval-Augmented Generation) system with knowledge base and chat interface",
   "main": "index.js",
   "scripts": {
     "start": "node server/index.js",
@@ -50,11 +50,11 @@
     "nodejs",
     "mongodb"
   ],
-  "author": "",
+  "author": "Ridham Dave",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/rag-chat-system.git"
+    "url": "git+https://github.com/ridhamdave/davemind.git"
   },
   "engines": {
     "node": ">=14.0.0",

@@ -10,7 +10,7 @@ const Header = ({ activeTab, onTabChange, tabs, vectorStats, user }) => {
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
               <Database className="h-8 w-8 text-primary-600" />
-              <h1 className="text-2xl font-bold text-gray-900">RAG Knowledge Chat</h1>
+              <h1 className="text-2xl font-bold text-gray-900">DaveMind</h1>
             </div>
           </div>
           
