@@ -109,6 +109,18 @@ sudo systemctl start mongodb
 
 ### 5. Start the Application
 
+#### Option A: One-Shot Startup (Recommended)
+```bash
+./start.sh
+```
+This script will:
+- Check all prerequisites
+- Install dependencies if needed
+- Validate environment configuration
+- Start both backend and frontend servers
+- Provide status updates and error handling
+
+#### Option B: Manual Startup
 ```bash
 # Terminal 1: Start backend server
 npm start
@@ -116,6 +128,11 @@ npm start
 # Terminal 2: Start frontend development server
 cd client
 npm start
+```
+
+#### Stop the Application
+```bash
+./stop.sh
 ```
 
 The application will be available at:
@@ -142,6 +159,9 @@ The application will be available at:
 ├── vector-db/              # Vector database files (gitignored)
 ├── .env                    # Environment variables (gitignored)
 ├── .gitignore
+├── start.sh                # One-shot startup script
+├── stop.sh                 # Application stop script
+├── LICENSE
 └── README.md
 ```
 
