@@ -51,8 +51,17 @@ app.use('/api/', (req, res, next) => {
 // Separate rate limiter for auth routes (more lenient)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // Allow more auth attempts
-  message: 'Too many authentication attempts, please try again later.'
+  max: 100, // Allow more auth attempts for development
+  message: 'Too many authentication attempts, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    console.log(`[RATE LIMIT] Auth rate limit exceeded for IP: ${req.ip}`);
+    res.status(429).json({
+      error: 'Too many authentication attempts, please try again later.',
+      retryAfter: Math.round(15 * 60) // 15 minutes in seconds
+    });
+  }
 });
 app.use('/api/auth/', authLimiter);
 
@@ -88,6 +97,15 @@ app.use(passport.session());
 
 // Serve static files
 app.use(express.static(path.join(__dirname, '../client/build')));
+
+// Development route to reset rate limits (only in development)
+if (process.env.NODE_ENV !== 'production') {
+  app.get('/api/reset-rate-limit', (req, res) => {
+    // Reset rate limit by clearing the store
+    authLimiter.resetKey(req.ip);
+    res.json({ message: 'Rate limit reset for your IP' });
+  });
+}
 
 // Routes
 app.use('/api/auth', authRoutes);

@@ -354,30 +354,32 @@ const KnowledgeManager = ({ onVectorUpdate }) => {
               <p>No files uploaded yet. Upload some documents to get started!</p>
             </div>
           ) : (
-            <div className="grid gap-4">
-              {files.map((file, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
-                >
-                  <div className="flex items-center space-x-3">
-                    <span className="text-2xl">{getFileIcon(file.type)}</span>
-                    <div>
-                      <p className="font-medium text-gray-900">{file.name}</p>
-                      <p className="text-sm text-gray-500">
-                        {formatFileSize(file.size)} • {new Date(file.modified).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleDeleteFile(file.name)}
-                    className="p-2 text-red-600 hover:bg-red-100 rounded-lg"
-                    title="Delete file"
+            <div className="max-h-96 overflow-y-auto border border-gray-200 rounded-lg">
+              <div className="grid gap-2 p-2">
+                {files.map((file, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
                   >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
+                    <div className="flex items-center space-x-3">
+                      <span className="text-2xl">{getFileIcon(file.type)}</span>
+                      <div>
+                        <p className="font-medium text-gray-900">{file.name}</p>
+                        <p className="text-sm text-gray-500">
+                          {formatFileSize(file.size)} • {new Date(file.modified).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteFile(file.name)}
+                      className="p-2 text-red-600 hover:bg-red-100 rounded-lg"
+                      title="Delete file"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
